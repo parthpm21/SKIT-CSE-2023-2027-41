@@ -30,6 +30,7 @@ const steps = [
 
 function AnalysisProgress({ selectedOptions, onComplete }) {
   const [currentStep, setCurrentStep] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
 
   const activeSteps = steps.filter((step) =>
     selectedOptions.includes(step.id)
@@ -44,10 +45,16 @@ function AnalysisProgress({ selectedOptions, onComplete }) {
       return () => clearTimeout(timer);
     }
 
-    if (activeSteps.length > 0 && currentStep === activeSteps.length) {
+    if (
+      activeSteps.length > 0 &&
+      currentStep === activeSteps.length &&
+      !isComplete
+    ) {
+      setIsComplete(true);
+
       const timer = setTimeout(() => {
         onComplete();
-      }, 800);
+      }, 1200);
 
       return () => clearTimeout(timer);
     }
@@ -57,8 +64,17 @@ function AnalysisProgress({ selectedOptions, onComplete }) {
     <div className="mx-auto max-w-3xl">
       <div className="rounded-3xl border border-gray-100 bg-white p-8 shadow-sm md:p-10">
         <div className="text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-100">
-            <ScanSearch className="h-8 w-8 text-purple-600" />
+          <div
+            className={`mx-auto flex h-16 w-16 items-center justify-center rounded-2xl ${
+              isComplete ? "bg-green-100" : "bg-purple-100"
+            }`}
+          >
+            {isComplete ? (
+              <CheckCircle2 className="h-8 w-8 text-green-600" />
+            ) : (
+              <ScanSearch className="h-8 w-8 text-purple-600" />
+            )}
+
           </div>
 
           <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-purple-600">
@@ -66,13 +82,15 @@ function AnalysisProgress({ selectedOptions, onComplete }) {
           </p>
 
           <h2 className="mt-2 text-2xl font-bold text-gray-900 md:text-3xl">
-            Analyzing Your Media
+            {isComplete ? "Analysis Complete" : "Analyzing Your Media"}
           </h2>
 
           <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-gray-500">
-            Our forensic pipeline is inspecting your media and preparing
-            explainable evidence.
+            {isComplete
+              ? "Your forensic analysis is complete. Preparing your results report..."
+              : "Our forensic pipeline is inspecting your media and preparing explainable evidence."}
           </p>
+
         </div>
 
         <div className="mt-10 space-y-4">
@@ -128,10 +146,12 @@ function AnalysisProgress({ selectedOptions, onComplete }) {
           <div className="mb-2 flex items-center justify-between text-xs font-medium text-gray-500">
             <span>Analysis progress</span>
             <span>
-              {Math.min(
-                Math.round((currentStep / activeSteps.length) * 100),
-                100
-              )}
+              {isComplete
+                ? 100
+                : Math.min(
+                    Math.round((currentStep / activeSteps.length) * 100),
+                    100
+                  )}
               %
             </span>
           </div>
@@ -140,10 +160,16 @@ function AnalysisProgress({ selectedOptions, onComplete }) {
             <div
               className="h-full rounded-full bg-purple-600 transition-all duration-700"
               style={{
-                width: `${Math.min(
-                  (currentStep / activeSteps.length) * 100,
-                  100
-                )}%`,
+               
+                width: `${
+                  isComplete
+                    ? 100
+                    : Math.min(
+                        (currentStep / activeSteps.length) * 100,
+                        100
+                      )
+                }%`,
+
               }}
             />
           </div>

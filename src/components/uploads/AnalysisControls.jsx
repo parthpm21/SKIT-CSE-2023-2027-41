@@ -1,31 +1,31 @@
 import {
+  ShieldAlert,
   ScanSearch,
-  MapPin,
   BrainCircuit,
   Check,
 } from "lucide-react";
 
-const analysisOptions = [
+const options = [
   {
     id: "detection",
-    icon: ScanSearch,
     title: "Manipulation Detection",
     description:
-      "Determine whether the media contains manipulated content.",
+      "Determine whether the media shows signs of AI generation or digital manipulation.",
+    icon: ShieldAlert,
   },
   {
     id: "localization",
-    icon: MapPin,
     title: "Manipulation Localization",
     description:
-      "Identify suspicious regions or frames within the media.",
+      "Identify suspicious regions in images or suspicious frames in videos.",
+    icon: ScanSearch,
   },
   {
     id: "explainability",
-    icon: BrainCircuit,
     title: "Explainable Analysis",
     description:
-      "Explore evidence behind the model's prediction.",
+      "Understand the visual evidence and signals that influence the prediction.",
+    icon: BrainCircuit,
   },
 ];
 
@@ -40,22 +40,30 @@ function AnalysisControls({ selectedOptions, setSelectedOptions }) {
 
   return (
     <div className="mt-8">
-      <div className="mb-4">
-        <p className="text-sm font-semibold uppercase tracking-wider text-purple-600">
-          Analysis Options
-        </p>
+      {/* Header */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-purple-600">
+            Analysis Configuration
+          </p>
 
-        <h3 className="mt-1 text-xl font-bold text-gray-900">
-          What would you like to inspect?
-        </h3>
+          <h3 className="mt-1 text-lg font-bold text-gray-900">
+            Choose forensic tasks
+          </h3>
 
-        <p className="mt-1 text-sm text-gray-500">
-          Select one or more forensic analysis tasks.
-        </p>
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-500">
+            Select the types of analysis you want TruthLens to perform.
+          </p>
+        </div>
+
+        <span className="w-fit rounded-full bg-purple-50 px-3 py-1.5 text-xs font-semibold text-purple-700">
+          {selectedOptions.length} of {options.length} selected
+        </span>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {analysisOptions.map((option) => {
+      {/* Options */}
+      <div className="mt-5 grid gap-4 lg:grid-cols-3">
+        {options.map((option) => {
           const Icon = option.icon;
           const selected = selectedOptions.includes(option.id);
 
@@ -64,43 +72,60 @@ function AnalysisControls({ selectedOptions, setSelectedOptions }) {
               key={option.id}
               type="button"
               onClick={() => toggleOption(option.id)}
-              className={`relative rounded-2xl border p-5 text-left transition ${
+              className={`relative text-left rounded-2xl border p-5 transition ${
                 selected
-                  ? "border-purple-300 bg-purple-50 shadow-sm"
-                  : "border-gray-100 bg-gray-50 hover:border-purple-200 hover:bg-purple-50/40"
+                  ? "border-purple-300 bg-purple-50/60 shadow-sm"
+                  : "border-gray-100 bg-gray-50 hover:border-purple-200 hover:bg-purple-50/20"
               }`}
             >
+              {/* Selection indicator */}
               <div
-                className={`absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-full ${
+                className={`absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-full border transition ${
                   selected
-                    ? "bg-purple-600 text-white"
-                    : "border border-gray-200 bg-white"
+                    ? "border-purple-600 bg-purple-600 text-white"
+                    : "border-gray-300 bg-white text-transparent"
                 }`}
               >
-                {selected && <Check className="h-3.5 w-3.5" />}
+                <Check className="h-3.5 w-3.5" />
               </div>
 
+              {/* Icon */}
               <div
                 className={`flex h-11 w-11 items-center justify-center rounded-xl ${
                   selected
-                    ? "bg-purple-100 text-purple-600"
-                    : "bg-white text-gray-500"
+                    ? "bg-white text-purple-600 shadow-sm"
+                    : "bg-white text-gray-400"
                 }`}
               >
                 <Icon className="h-5 w-5" />
               </div>
 
-              <h4 className="mt-4 pr-6 font-semibold text-gray-900">
+              <h4 className="mt-4 pr-8 text-sm font-semibold text-gray-900">
                 {option.title}
               </h4>
 
               <p className="mt-2 text-xs leading-5 text-gray-500">
                 {option.description}
               </p>
+
+              <div
+                className={`mt-4 text-[10px] font-semibold uppercase tracking-wider ${
+                  selected ? "text-purple-600" : "text-gray-400"
+                }`}
+              >
+                {selected ? "Selected" : "Click to select"}
+              </div>
             </button>
           );
         })}
       </div>
+
+      {/* Selection warning */}
+      {selectedOptions.length === 0 && (
+        <div className="mt-4 rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 text-xs text-orange-700">
+          Select at least one forensic task before starting the analysis.
+        </div>
+      )}
     </div>
   );
 }

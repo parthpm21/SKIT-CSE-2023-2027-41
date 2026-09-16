@@ -7,6 +7,9 @@ import ConfidenceBreakdown from "../components/results/ConfidenceBreakdown";
 import SuspiciousRegions from "../components/results/SuspiciousRegions";
 import ExplainabilityPanel from "../components/results/ExplainabilityPanel";
 import AnalysisMetadata from "../components/results/AnalysisMetadata";
+import TechnicalDetails from "../components/results/TechnicalDetails";
+import { Link } from "react-router-dom";
+import { Download, ArrowLeft } from "lucide-react";
 import {
   CheckCircle2,
   AlertTriangle,
@@ -148,41 +151,31 @@ function Results() {
         />
 
         {/* Technical details */}
-        <section className="mt-6 grid gap-6 md:grid-cols-3">
+        <TechnicalDetails
+          file={file}
+          selectedOptions={selectedOptions}
+        />
 
-          <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-              Media Type
-            </p>
+        {/* Result actions */}
+        <section className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <Link
+            to="/analyze"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Analyze Another Media
+          </Link>
 
-            <p className="mt-2 text-lg font-bold text-gray-900">
-              Image
-            </p>
-          </div>
-
-          <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-              Suspicious Regions
-            </p>
-
-            <p className="mt-2 text-lg font-bold text-gray-900">
-              4 detected
-            </p>
-          </div>
-
-          <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-              Analysis Status
-            </p>
-
-            <div className="mt-2 flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
-              <p className="text-lg font-bold text-gray-900">
-                Complete
-              </p>
-            </div>
-          </div>
-
+          <button
+            type="button"
+            onClick={() =>
+              alert("Report export will be available after backend integration.")
+            }
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-700"
+          >
+            <Download className="h-4 w-4" />
+            Download Report
+          </button>
         </section>
 
         {/* Trust note */}
