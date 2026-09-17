@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 import Stats from "../components/home/Stats";
+import About from "../components/home/About";
 import Features from "../components/home/Features";
 import HowItWorks from "../components/home/HowItWorks";
 import CTA from "../components/home/CTA";
@@ -165,6 +166,8 @@ function Home() {
       </section>
 
       <Stats />
+
+      <About />
 
       <Features />
 
