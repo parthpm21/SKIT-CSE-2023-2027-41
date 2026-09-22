@@ -36,7 +36,7 @@ function Navbar() {
           </Link>
 
           <Link
-            to="/about"
+            to="/how-it-works"
             className="text-sm font-medium text-gray-600 transition hover:text-purple-600"
           >
             How It Works
