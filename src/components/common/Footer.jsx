@@ -41,7 +41,7 @@ function Footer() {
           </Link>
 
           <Link
-            to="/about"
+            to="/how-it-works"
             className="text-gray-500 transition hover:text-purple-600"
           >
             How It Works
