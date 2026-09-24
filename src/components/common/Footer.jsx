@@ -3,13 +3,16 @@ import { ShieldCheck } from "lucide-react";
 
 function Footer() {
   return (
-    <footer className="border-t border-gray-100 bg-white px-6 py-10">
+    <footer className="border-t border-gray-100 bg-white px-6 py-12">
       <div className="mx-auto flex max-w-7xl flex-col gap-8 md:flex-row md:items-center md:justify-between">
 
         {/* Brand */}
         <div>
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-100">
+          <Link
+            to="/"
+            className="group flex items-center gap-2.5"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-100 transition-transform duration-200 group-hover:scale-105">
               <ShieldCheck className="h-5 w-5 text-purple-600" />
             </div>
 
@@ -28,28 +31,21 @@ function Footer() {
         <div className="flex flex-wrap gap-x-8 gap-y-3 text-sm">
           <Link
             to="/"
-            className="text-gray-500 transition hover:text-purple-600"
+            className="text-gray-500 transition-colors duration-200 hover:text-purple-600"
           >
             Home
           </Link>
 
           <Link
             to="/analyze"
-            className="text-gray-500 transition hover:text-purple-600"
+            className="text-gray-500 transition-colors duration-200 hover:text-purple-600"
           >
             Analyze
           </Link>
 
           <Link
             to="/about"
-            className="text-gray-500 transition hover:text-purple-600"
-          >
-            How It Works
-          </Link>
-
-          <Link
-            to="/about"
-            className="text-gray-500 transition hover:text-purple-600"
+            className="text-gray-500 transition-colors duration-200 hover:text-purple-600"
           >
             About
           </Link>
@@ -57,7 +53,7 @@ function Footer() {
 
       </div>
 
-      <div className="mx-auto mt-8 max-w-7xl border-t border-gray-100 pt-6">
+      <div className="mx-auto mt-10 max-w-7xl border-t border-gray-100 pt-6">
         <p className="text-center text-xs text-gray-400">
           © {new Date().getFullYear()} TruthLens. Explainable digital media
           forensics.

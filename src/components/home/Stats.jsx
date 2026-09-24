@@ -36,27 +36,26 @@ function Stats() {
   return (
     <section className="relative z-20 -mt-2 px-6 pb-24">
       <div className="mx-auto grid max-w-6xl overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-xl shadow-gray-200/40 md:grid-cols-2 lg:grid-cols-4">
-
         {capabilities.map((item, index) => {
           const Icon = item.icon;
 
           return (
             <div
               key={item.title}
-              className={`flex items-center gap-4 p-6 transition hover:bg-gray-50 ${
+              className={`group flex items-center gap-4 p-6 transition-all duration-300 hover:bg-gray-50 ${
                 index !== capabilities.length - 1
                   ? "border-b border-gray-100 lg:border-b-0 lg:border-r"
                   : ""
               }`}
             >
               <div
-                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${item.iconStyle}`}
+                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${item.iconStyle} transition-transform duration-300 group-hover:scale-105`}
               >
                 <Icon className="h-6 w-6" />
               </div>
 
               <div>
-                <h3 className="font-semibold text-gray-900">
+                <h3 className="font-semibold text-gray-900 transition-colors duration-200 group-hover:text-purple-700">
                   {item.title}
                 </h3>
 
@@ -67,7 +66,6 @@ function Stats() {
             </div>
           );
         })}
-
       </div>
     </section>
   );

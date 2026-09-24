@@ -28,15 +28,14 @@ function Home() {
 
           {/* Left content */}
           <div>
-
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-purple-100 bg-purple-50 px-4 py-2">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-purple-100 bg-white/80 px-4 py-2 shadow-sm backdrop-blur-sm transition hover:border-purple-200 hover:shadow-md">
               <ShieldCheck className="h-4 w-4 text-purple-600" />
               <span className="text-sm font-semibold text-purple-700">
                 Explainable Digital Media Forensics
               </span>
             </div>
 
-            <h1 className="max-w-3xl text-5xl font-bold leading-[1.08] tracking-tight text-gray-900 md:text-6xl lg:text-7xl">
+            <h1 className="max-w-3xl text-5xl font-bold leading-[1.05] tracking-tight text-gray-900 md:text-6xl lg:text-7xl">
               Detect What's Real.
               <br />
               <span className="text-purple-600">
@@ -54,7 +53,7 @@ function Home() {
 
               <Link
                 to="/analyze"
-                className="group flex items-center gap-2 rounded-full bg-purple-600 px-6 py-3.5 font-semibold text-white shadow-lg shadow-purple-200 transition hover:bg-purple-700"
+                className="group flex items-center gap-2 rounded-full bg-purple-600 px-6 py-3.5 font-semibold text-white shadow-lg shadow-purple-200 transition-all duration-200 hover:-translate-y-0.5 hover:bg-purple-700 hover:shadow-xl hover:shadow-purple-200"
               >
                 Analyze Media
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -62,9 +61,9 @@ function Home() {
 
               <Link
                 to="/about"
-                className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-6 py-3.5 font-semibold text-gray-700 transition hover:border-purple-200 hover:text-purple-600"
+                className="group flex items-center gap-2 rounded-full border border-gray-200 bg-white px-6 py-3.5 font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-purple-200 hover:text-purple-600 hover:shadow-md"
               >
-                <Play className="h-4 w-4" />
+                <Play className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
                 How It Works
               </Link>
 
@@ -76,7 +75,7 @@ function Home() {
           <div className="relative mx-auto w-full max-w-xl">
 
             {/* Main card */}
-            <div className="rounded-[2rem] border border-white bg-white p-5 shadow-2xl shadow-purple-100/70">
+            <div className="rounded-[2rem] border border-gray-100 bg-white p-5 shadow-2xl shadow-purple-100/70 transition-transform duration-500 hover:-translate-y-1">
 
               {/* Card header */}
               <div className="mb-4 flex items-center justify-between">
@@ -96,13 +95,13 @@ function Home() {
               </div>
 
               {/* Fake media preview */}
-              <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100">
+              <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 shadow-inner">
 
                 <div className="absolute left-[18%] top-[22%] h-24 w-24 rounded-full bg-purple-300/40 blur-xl" />
 
                 <div className="absolute right-[20%] top-[30%] h-28 w-28 rounded-full bg-blue-300/40 blur-xl" />
 
-                <div className="relative rounded-2xl border border-white/80 bg-white/60 px-10 py-8 text-center shadow-lg backdrop-blur-sm">
+                <div className="relative rounded-2xl border border-white/80 bg-white/60 px-10 py-8 text-center shadow-lg backdrop-blur-md transition-transform duration-300 hover:scale-[1.02]">
                   <ScanSearch className="mx-auto h-12 w-12 text-purple-500" />
 
                   <p className="mt-3 font-semibold text-gray-800">
@@ -151,8 +150,10 @@ function Home() {
             </div>
 
             {/* Floating badge */}
-              <div className="absolute -bottom-5 right-5 rounded-2xl border border-white bg-white px-4 py-3 shadow-xl">              <div className="flex items-center gap-2">
-                <div className="h-2.5 w-2.5 rounded-full bg-green-400" />
+            <div className="absolute -bottom-5 right-5 rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-xl transition-transform duration-300 hover:-translate-y-1">
+              <div className="flex items-center gap-2">
+                <div className="h-2.5 w-2.5 rounded-full bg-green-400 shadow-sm shadow-green-200" />
+
                 <span className="text-sm font-semibold text-gray-700">
                   Explainable AI
                 </span>
