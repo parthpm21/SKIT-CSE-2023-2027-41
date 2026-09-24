@@ -9,7 +9,6 @@ import {
 
 import Stats from "../components/home/Stats";
 import Features from "../components/home/Features";
-import HowItWorks from "../components/home/HowItWorks";
 import CTA from "../components/home/CTA";
 import Footer from "../components/common/Footer";
 
@@ -166,10 +165,7 @@ function Home() {
       </section>
 
       <Stats />
-
       <Features />
-
-      <HowItWorks />
 
       <CTA />
 

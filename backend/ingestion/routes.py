@@ -34,3 +34,27 @@ async def preprocess_video(file: UploadFile = File(...), num_frames: int = 16):
     Path(tmp_path).unlink(missing_ok=True)
     return {"filename": file.filename, "num_frames_extracted": int(tensor.shape[0]),
             "shape": list(tensor.shape)}
+
+
+
+
+
+from backend.inference.router import route_inference
+
+@router.post("/analyze")
+async def analyze(file: UploadFile = File(...)):
+    with tempfile.NamedTemporaryFile(suffix=Path(file.filename).suffix, delete=False) as tmp:
+        tmp.write(await file.read())
+        tmp_path = tmp.name
+    try:
+        result = route_inference(tmp_path, file.filename)
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
+    return {
+        "filename": file.filename,
+        "media_type": result.media_type,
+        "label": result.label,
+        "confidence": result.confidence,
+        "model_version": result.model_version,
+        "details": result.details,
+    }
