@@ -50,7 +50,7 @@ def route_inference(file_path: str | Path, filename: str) -> InferenceResponse:
             label=result.label,
             confidence=result.confidence,
             model_version=result.model_version,
-            details={},
+            details=getattr(result, "details", {}),
         )
 
     tensor = preprocess_video_file(file_path)
