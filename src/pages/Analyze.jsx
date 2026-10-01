@@ -4,7 +4,6 @@ import {
   Upload,
   Image as ImageIcon,
   Video,
-  FileImage,
   X,
   ArrowRight,
   ShieldCheck,
@@ -31,16 +30,22 @@ function Analyze() {
 
     useEffect(() => {
     if (!file) {
-        setPreviewUrl(null);
         return;
     }
 
     const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
 
-    return () => URL.revokeObjectURL(url);
+    const frame = requestAnimationFrame(() => {
+        setPreviewUrl(url);
+    });
+
+    return () => {
+        cancelAnimationFrame(frame);
+        URL.revokeObjectURL(url);
+    };
     }, [file]);
 
+    
   const handleStartAnalysis = () => {
     if (!file || selectedOptions.length === 0) return;
 

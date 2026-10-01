@@ -30,11 +30,14 @@ const steps = [
 
 function AnalysisProgress({ selectedOptions, onComplete }) {
   const [currentStep, setCurrentStep] = useState(0);
-  const [isComplete, setIsComplete] = useState(false);
 
+  
   const activeSteps = steps.filter((step) =>
     selectedOptions.includes(step.id)
   );
+  
+  const isComplete =
+    activeSteps.length > 0 && currentStep === activeSteps.length;
 
   useEffect(() => {
     if (currentStep < activeSteps.length) {
@@ -45,20 +48,14 @@ function AnalysisProgress({ selectedOptions, onComplete }) {
       return () => clearTimeout(timer);
     }
 
-    if (
-      activeSteps.length > 0 &&
-      currentStep === activeSteps.length &&
-      !isComplete
-    ) {
-      setIsComplete(true);
-
+    if (isComplete) {
       const timer = setTimeout(() => {
         onComplete();
       }, 1200);
 
       return () => clearTimeout(timer);
     }
-  }, [currentStep, activeSteps.length, onComplete]);
+  }, [currentStep, activeSteps.length, onComplete, isComplete]);
 
   return (
     <div className="mx-auto max-w-3xl">

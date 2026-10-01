@@ -9,9 +9,6 @@ function TechnicalDetails({ file, selectedOptions = [] }) {
   const isVideo = file?.type?.startsWith("video/");
   const mediaType = isVideo ? "Video" : "Image";
 
-  const fileSize = file
-    ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
-    : "—";
 
   const fileType = file?.type
     ? file.type.split("/")[1]?.toUpperCase()

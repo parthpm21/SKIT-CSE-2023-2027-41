@@ -11,8 +11,6 @@ import TechnicalDetails from "../components/results/TechnicalDetails";
 import { Link } from "react-router-dom";
 import { Download, ArrowLeft } from "lucide-react";
 import {
-  CheckCircle2,
-  AlertTriangle,
   ShieldCheck,
   ScanSearch,
   MapPin,

@@ -42,14 +42,19 @@ function HeatmapViewer({ file, selectedRegion }) {
 
   useEffect(() => {
     if (!file || !file.type?.startsWith("image/")) {
-      setPreviewUrl(null);
       return;
     }
 
     const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
 
-    return () => URL.revokeObjectURL(url);
+    const frame = requestAnimationFrame(() => {
+      setPreviewUrl(url);
+    });
+
+    return () => {
+      cancelAnimationFrame(frame);
+      URL.revokeObjectURL(url);
+    };
   }, [file]);
 
   const resetView = () => {
@@ -75,7 +80,7 @@ function HeatmapViewer({ file, selectedRegion }) {
     },
   ];
 
-  if (!previewUrl) {
+  if (!file || !file.type?.startsWith("image/") || !previewUrl) {
     return (
       <section className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
         <div className="flex h-80 items-center justify-center rounded-2xl bg-gray-50">
