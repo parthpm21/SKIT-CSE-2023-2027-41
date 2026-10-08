@@ -145,6 +145,8 @@ class DDIMScheduler:
 
         # Forward ODE step to next higher noise level
         next_sample = math.sqrt(alpha_next) * pred_x0 + math.sqrt(1.0 - alpha_next) * model_output_noise
+        if self.config.clip_sample:
+            next_sample = np.clip(next_sample, -1.0, 1.0)
         return next_sample
 
     def reverse_step(
@@ -171,6 +173,8 @@ class DDIMScheduler:
 
         # Deterministic reverse step
         prev_sample = math.sqrt(alpha_prev) * pred_x0 + math.sqrt(1.0 - alpha_prev) * model_output_noise
+        if self.config.clip_sample:
+            prev_sample = np.clip(prev_sample, -1.0, 1.0)
         return prev_sample
 
 

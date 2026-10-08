@@ -35,6 +35,9 @@ def create_app() -> FastAPI:
     app.include_router(validate.router)
     app.include_router(manifest.router)
 
+    from backend.ingestion.routes import router as ingestion_router
+    app.include_router(ingestion_router)
+
     return app
 
 
