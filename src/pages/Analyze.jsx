@@ -257,9 +257,10 @@ function Analyze() {
                         </h2>
 
                         <div className="mt-2 flex flex-wrap items-center gap-2">
-                            <span className="rounded-full bg-green-50 px-2.5 py-1 text-[10px] font-semibold text-green-600">
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-[10px] font-semibold text-green-600">
+                            <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
                             Ready for analysis
-                            </span>
+                            </span>                            
 
                             <span className="text-xs text-gray-400">
                             {isVideo ? "Video" : "Image"}
@@ -308,7 +309,7 @@ function Analyze() {
                         </div>
 
                         <div className="rounded-2xl bg-gray-50 p-4">
-                        <p className="text-xs text-gray-400">File Name</p>
+                        <p className="text-xs text-gray-400">Media Type</p>
 
                         <p className="mt-1 text-sm font-semibold text-gray-800">
                         {isVideo ? "Video Media" : "Image Media"}
@@ -325,8 +326,9 @@ function Analyze() {
 
                     </div>
 
-                    <div className="mt-4 flex items-center gap-3 rounded-2xl border border-green-100 bg-green-50 px-4 py-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white">
+                    
+                    <div className="group mt-4 flex items-center gap-3 rounded-2xl border border-green-100 bg-green-50 px-4 py-3 transition-all duration-200 hover:border-green-200 hover:shadow-sm">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white transition-transform duration-200 group-hover:scale-105">
                         <ShieldCheck className="h-4 w-4 text-green-600" />
                     </div>
 
@@ -351,7 +353,7 @@ function Analyze() {
                         type="button"
                         onClick={handleStartAnalysis}
                         disabled={!file || selectedOptions.length === 0}
-                        className="group mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-purple-600 px-6 py-4 font-semibold text-white shadow-lg shadow-purple-200 transition hover:bg-purple-700"
+                        className="group mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-purple-600 px-6 py-4 font-semibold text-white shadow-lg shadow-purple-200 transition-all duration-200 hover:-translate-y-0.5 hover:bg-purple-700 hover:shadow-xl disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none disabled:hover:translate-y-0"
                     >
                         Start Analysis
 
