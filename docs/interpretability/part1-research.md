@@ -10,30 +10,30 @@ The objective of this research is to analyze the existing TruthLens codebase and
 ### Currently Implemented Architecture
 
 #### Image Pipeline
-- **Implementation File**: [`backend/data/image_preprocessor.py`](file:///c:/Users/ashok/OneDrive/Desktop/TruthLens_New/backend/data/image_preprocessor.py)
+- **Implementation File**: [`backend/data/image_preprocessor.py`](../../backend/data/image_preprocessor.py)
 - **Classes**:
   - `ImagePreprocessor`: Performs image decoding (RGB, RGBA blending, Grayscale), EXIF forensic metadata extraction (`extract_exif`), high-frequency Laplacian noise residual extraction (`extract_noise_residual`), resizing (`_resize_image` with `LETTERBOX`, `CENTER_CROP`, `DIRECT`), and tensor normalization (`IMAGENET`, `ZERO_TO_ONE`, `MINUS_ONE_TO_ONE`).
   - `ProcessedImage`: Container dataclass for preprocessed tensor `(3, H, W)`, dimensions, padding offsets, scale factor, and EXIF/noise metadata.
-- **Gateway Endpoint**: `POST /api/v1/ingest/image` in [`backend/gateway/routes/ingest.py`](file:///c:/Users/ashok/OneDrive/Desktop/TruthLens_New/backend/gateway/routes/ingest.py).
+- **Gateway Endpoint**: `POST /api/v1/ingest/image` in [`backend/gateway/routes/ingest.py`](../../backend/gateway/routes/ingest.py).
 
 #### Video Pipeline & Frame Extraction
-- **Implementation File**: [`backend/data/video_preprocessor.py`](file:///c:/Users/ashok/OneDrive/Desktop/TruthLens_New/backend/data/video_preprocessor.py)
+- **Implementation File**: [`backend/data/video_preprocessor.py`](../../backend/data/video_preprocessor.py)
 - **Classes**:
   - `VideoPreprocessor`: Handles video decoding via OpenCV `cv2.VideoCapture`.
   - `VideoPreprocessor._determine_frame_indices()`: Implements frame extraction strategies (`UNIFORM`, `FPS`, `ALL`, `KEYFRAME_FIRST`).
   - `VideoPreprocessor.process()`: Iterates through frames, decodes BGR to RGB, processes each frame with `ImagePreprocessor`, and stacks tensors into temporal sequence `(T, C, H, W)`.
   - `ProcessedVideo`: Dataclass storing temporal tensor `(T, C, H, W)`, frame metadata (`VideoFrameMetadata`), FPS, and helper methods `to_batch()` and `to_channel_first_temporal()` for `(C, T, H, W)` shape conversion.
-- **Gateway Endpoint**: `POST /api/v1/ingest/video` in [`backend/gateway/routes/ingest.py`](file:///c:/Users/ashok/OneDrive/Desktop/TruthLens_New/backend/gateway/routes/ingest.py).
+- **Gateway Endpoint**: `POST /api/v1/ingest/video` in [`backend/gateway/routes/ingest.py`](../../backend/gateway/routes/ingest.py).
 
 #### Validation & Benchmark Infrastructure
 - **Implementation Files**:
-  - [`backend/data/validator.py`](file:///c:/Users/ashok/OneDrive/Desktop/TruthLens_New/backend/data/validator.py): `PreprocessingValidator` for checking resolution, byte size, file corruption, and label/verdict consistency.
-  - [`backend/data/dataset_manifest.py`](file:///c:/Users/ashok/OneDrive/Desktop/TruthLens_New/backend/data/dataset_manifest.py): `DatasetManifest` and `BenchmarkSample` data models.
+  - [`backend/data/validator.py`](../../backend/data/validator.py): `PreprocessingValidator` for checking resolution, byte size, file corruption, and label/verdict consistency.
+  - [`backend/data/dataset_manifest.py`](../../backend/data/dataset_manifest.py): `DatasetManifest` and `BenchmarkSample` data models.
 
 #### Relevant Test Files
-- [`tests/test_image_preprocessor.py`](file:///c:/Users/ashok/OneDrive/Desktop/TruthLens_New/tests/test_image_preprocessor.py): Unit tests for image preprocessing.
-- [`tests/test_video_preprocessor.py`](file:///c:/Users/ashok/OneDrive/Desktop/TruthLens_New/tests/test_video_preprocessor.py): Unit tests for video frame extraction.
-- [`tests/test_gateway_api.py`](file:///c:/Users/ashok/OneDrive/Desktop/TruthLens_New/tests/test_gateway_api.py): Integration tests for FastAPI endpoints.
+- [`tests/test_image_preprocessor.py`](../../tests/test_image_preprocessor.py): Unit tests for image preprocessing.
+- [`tests/test_video_preprocessor.py`](../../tests/test_video_preprocessor.py): Unit tests for video frame extraction.
+- [`tests/test_gateway_api.py`](../../tests/test_gateway_api.py): Integration tests for FastAPI endpoints.
 
 ### Models & Inference Status in Current Codebase
 - **CLIP Implementation**: `Not found in current codebase`
@@ -97,8 +97,8 @@ Attention Rollout propagates multi-head self-attention matrices across Transform
 
 | Branch / Model Architecture | Currently Implemented? | Grad-CAM Applicability (Future) | Attention Rollout Applicability (Future) | Expected Output Format |
 | :--- | :--- | :--- | :--- | :--- |
-| **Image Preprocessing** | Yes ([`image_preprocessor.py`](file:///c:/Users/ashok/OneDrive/Desktop/TruthLens_New/backend/data/image_preprocessor.py)) | Target input tensor provider | Target input tensor provider | Normalized `(3, H, W)` tensor |
-| **Video Frame Pipeline** | Yes ([`video_preprocessor.py`](file:///c:/Users/ashok/OneDrive/Desktop/TruthLens_New/backend/data/video_preprocessor.py)) | Frame-wise batch tensor provider | Frame-wise batch tensor provider | Frame sequence `(T, C, H, W)` |
+| **Image Preprocessing** | Yes ([`image_preprocessor.py`](../../backend/data/image_preprocessor.py)) | Target input tensor provider | Target input tensor provider | Normalized `(3, H, W)` tensor |
+| **Video Frame Pipeline** | Yes ([`video_preprocessor.py`](../../backend/data/video_preprocessor.py)) | Frame-wise batch tensor provider | Frame-wise batch tensor provider | Frame sequence `(T, C, H, W)` |
 | **CLIP (Vision Transformer)** | `Not found in current codebase` | Applicable (Target: final block layer norm + patch reshape) | Applicable (Target: `self_attn` maps, `[CLS]` token) | 2D Spatial Heatmap |
 | **ViT (Vision Transformer)** | `Not found in current codebase` | Applicable (Target: `blocks[-1].norm1` + patch reshape) | Applicable (Target: `blocks[*].attn` rollout) | 2D Spatial Heatmap |
 | **DINO / DINOv2** | `Not found in current codebase` | Applicable (Target: last Transformer block norm) | Applicable (Target: self-attention rollout) | 2D Segmentation / Heatmap |
@@ -109,10 +109,10 @@ Attention Rollout propagates multi-head self-attention matrices across Transform
 ## 5. Relevant Files, Classes, and Functions
 
 ### Current Codebase Components
-- **Image Preprocessor**: [`ImagePreprocessor`](file:///c:/Users/ashok/OneDrive/Desktop/TruthLens_New/backend/data/image_preprocessor.py#L55) in [`backend/data/image_preprocessor.py`](file:///c:/Users/ashok/OneDrive/Desktop/TruthLens_New/backend/data/image_preprocessor.py)
-- **Video Preprocessor**: [`VideoPreprocessor`](file:///c:/Users/ashok/OneDrive/Desktop/TruthLens_New/backend/data/video_preprocessor.py#L73) in [`backend/data/video_preprocessor.py`](file:///c:/Users/ashok/OneDrive/Desktop/TruthLens_New/backend/data/video_preprocessor.py)
-- **Frame Extraction**: [`VideoPreprocessor._determine_frame_indices()`](file:///c:/Users/ashok/OneDrive/Desktop/TruthLens_New/backend/data/video_preprocessor.py#L104) and [`VideoPreprocessor.process()`](file:///c:/Users/ashok/OneDrive/Desktop/TruthLens_New/backend/data/video_preprocessor.py#L136)
-- **Ingestion Routes**: `ingest_image` and `ingest_video` in [`backend/gateway/routes/ingest.py`](file:///c:/Users/ashok/OneDrive/Desktop/TruthLens_New/backend/gateway/routes/ingest.py)
+- **Image Preprocessor**: [`ImagePreprocessor`](../../backend/data/image_preprocessor.py) in [`backend/data/image_preprocessor.py`](../../backend/data/image_preprocessor.py)
+- **Video Preprocessor**: [`VideoPreprocessor`](../../backend/data/video_preprocessor.py) in [`backend/data/video_preprocessor.py`](../../backend/data/video_preprocessor.py)
+- **Frame Extraction**: `VideoPreprocessor._determine_frame_indices()` and `VideoPreprocessor.process()` in [`backend/data/video_preprocessor.py`](../../backend/data/video_preprocessor.py)
+- **Ingestion Routes**: `ingest_image` and `ingest_video` in [`backend/gateway/routes/ingest.py`](../../backend/gateway/routes/ingest.py)
 
 ### Planned Future Components (Parts 2, 3, 4)
 - `backend/interpretability/gradcam.py`: Will contain `GradCAMEngine` for PyTorch model hook registration.
