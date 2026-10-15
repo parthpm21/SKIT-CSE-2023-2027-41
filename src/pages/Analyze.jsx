@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   Lock,
   ChevronDown,
-  HelpCircle,
   Lightbulb,
 } from "lucide-react";
 
