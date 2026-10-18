@@ -58,3 +58,20 @@ async def analyze(file: UploadFile = File(...)):
         "model_version": result.model_version,
         "details": result.details,
     }
+
+
+
+    
+
+from fastapi import HTTPException
+from backend.fusion.contracts import FusionInput, FusionResult
+from backend.fusion.engine import fusion_engine
+
+
+@router.post("/fusion/analyze", response_model=FusionResult)
+def fusion_analyze(payload: FusionInput):
+    """Fuse image / diffusion / video branch outputs into one verdict + localization map."""
+    try:
+        return fusion_engine.run(payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
