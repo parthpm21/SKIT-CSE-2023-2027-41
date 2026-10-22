@@ -12,7 +12,6 @@ import {
   Hash,
   Cpu,
   Layers,
-  Sparkles,
 } from "lucide-react";
 
 /**
@@ -37,14 +36,18 @@ function ExportReportModal({ isOpen, onClose, file, selectedOptions = [] }) {
       minute: "2-digit",
     });
 
-    // Simulated media SHA-256 fingerprint
-    const simulatedHash = Array.from(
-      { length: 4 },
-      () => Math.random().toString(16).substring(2, 10)
-    ).join("");
+    const seedStr = (file?.name || "sample_analyzed_media.mp4") + (file?.size || "4820000");
+    let seedVal = 0;
+    for (let i = 0; i < seedStr.length; i++) {
+      seedVal = ((seedVal << 5) - seedVal + seedStr.charCodeAt(i)) | 0;
+    }
+    const absSeed = Math.abs(seedVal);
+    const hexPart = absSeed.toString(16).padStart(8, "0");
+    const simulatedHash = `${hexPart}e4f79b2089c16d5483a9f0b12e34d678`;
+    const reportIdNum = 100000 + (absSeed % 900000);
 
     return {
-      reportId: `TL-REP-2026-${Math.floor(100000 + Math.random() * 900000)}`,
+      reportId: `TL-REP-2026-${reportIdNum}`,
       generatedAt: formattedDate,
       checksum: `sha256:${simulatedHash}`,
       verdict: "Potentially Manipulated",

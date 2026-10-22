@@ -55,10 +55,13 @@ def route_inference(file_path: str | Path, filename: str) -> InferenceResponse:
 
     tensor = preprocess_video_file(file_path)
     result = video_deepfake_service.predict(tensor)
+    video_details = {"frame_scores": result.frame_scores}
+    if hasattr(result, "details") and isinstance(result.details, dict):
+        video_details.update(result.details)
     return InferenceResponse(
         media_type="video",
         label=result.label,
         confidence=result.confidence,
         model_version=result.model_version,
-        details={"frame_scores": result.frame_scores},
+        details=video_details,
     )

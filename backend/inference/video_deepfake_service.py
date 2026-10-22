@@ -18,6 +18,7 @@ import numpy as np
 
 from backend.inference.video_backbone import dual_stream_backbone, DualStreamVideoBackbone
 from backend.inference.face_aligner import video_face_pipeline, VideoFacePipeline
+from backend.inference.temporal_ensemble import video_ensemble_pipeline, VideoEnsemblePipeline
 
 
 @dataclass
@@ -26,6 +27,11 @@ class VideoVerdict:
     confidence: float
     frame_scores: list[float]
     model_version: str
+    details: dict = None
+
+    def __post_init__(self):
+        if self.details is None:
+            self.details = {}
 
 
 class VideoDeepfakeService:
@@ -36,12 +42,14 @@ class VideoDeepfakeService:
         weights_path: Optional[str | Path] = None,
         backbone: Optional[DualStreamVideoBackbone] = None,
         face_pipeline: Optional[VideoFacePipeline] = None,
+        ensemble_pipeline: Optional[VideoEnsemblePipeline] = None,
     ):
         self.model_version = "xception-efficientnet-ensemble-v1"
         self._model = None
         self._weights_loaded = False
         self.backbone = backbone or dual_stream_backbone
         self.face_pipeline = face_pipeline or video_face_pipeline
+        self.ensemble_pipeline = ensemble_pipeline or video_ensemble_pipeline
         if weights_path:
             self.load_weights(weights_path)
 
@@ -83,19 +91,18 @@ class VideoDeepfakeService:
             confidence = avg_score if label == "fake" else 1.0 - avg_score
             return VideoVerdict(label, confidence, frame_scores, self.model_version)
 
-        # Execute Pratham's Xception + EfficientNet Dual-Stream Backbone
+        # Execute Pratham's Full Video Deepfake Pipeline (Face Alignment + Dual-Stream + SRM Noise + Temporal Ensemble)
         if frame_tensor.shape[0] == 0:
-            return VideoVerdict("real", 1.0, [], self.model_version)
+            return VideoVerdict("real", 1.0, [], self.model_version, details={})
 
-        # Align faces across frames if spatial dimensions match
-        aligned_seq = self.face_pipeline.process_frames(frame_tensor)
-        inference_res = self.backbone.predict_video_sequence(aligned_seq.aligned_frames)
+        ensemble_res = self.ensemble_pipeline.predict(frame_tensor)
 
         return VideoVerdict(
-            label=inference_res.label,
-            confidence=inference_res.confidence,
-            frame_scores=inference_res.frame_scores,
+            label=ensemble_res.label,
+            confidence=ensemble_res.confidence,
+            frame_scores=ensemble_res.frame_scores,
             model_version=self.model_version,
+            details=ensemble_res.details,
         )
 
 
