@@ -8,6 +8,7 @@ import SuspiciousRegions from "../components/results/SuspiciousRegions";
 import ExplainabilityPanel from "../components/results/ExplainabilityPanel";
 import AnalysisMetadata from "../components/results/AnalysisMetadata";
 import TechnicalDetails from "../components/results/TechnicalDetails";
+import ExportReportModal from "../components/results/ExportReportModal";
 import { Link } from "react-router-dom";
 import { Download, ArrowLeft } from "lucide-react";
 import {
@@ -26,6 +27,7 @@ function Results() {
   const selectedOptions = location.state?.selectedOptions || [];
 
   const [selectedRegion, setSelectedRegion] = useState(null);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   return (
     <main className="min-h-screen bg-[#faf9fc] px-6 pb-20 pt-32">
       <div className="mx-auto max-w-7xl">
@@ -166,15 +168,21 @@ function Results() {
 
           <button
             type="button"
-            onClick={() =>
-              alert("Report export will be available after backend integration.")
-            }
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-700"
+            onClick={() => setIsReportModalOpen(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-700 cursor-pointer"
           >
             <Download className="h-4 w-4" />
             Download Report
           </button>
         </section>
+
+        {/* Forensic Report Modal */}
+        <ExportReportModal
+          isOpen={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+          file={file}
+          selectedOptions={selectedOptions}
+        />
 
         {/* Trust note */}
         <div className="mt-8 flex items-center gap-3 rounded-2xl border border-purple-100 bg-purple-50 p-4">
