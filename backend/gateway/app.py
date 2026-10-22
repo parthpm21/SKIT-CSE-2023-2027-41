@@ -38,6 +38,13 @@ def create_app() -> FastAPI:
     from backend.ingestion.routes import router as ingestion_router
     app.include_router(ingestion_router)
 
+    from fastapi.responses import RedirectResponse
+
+    @app.get("/", include_in_schema=False)
+    def root():
+        """Redirects root visitor to interactive Swagger UI documentation."""
+        return RedirectResponse(url="/docs")
+
     return app
 
 
