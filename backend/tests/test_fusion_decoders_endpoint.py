@@ -114,3 +114,29 @@ class TestFusionEndpoint:
     def test_malformed_payload_is_rejected_with_422(self):
         resp = self.client.post("/api/v1/fusion/analyze", json={"sample_id": "x", "image": {"probe_score": 0.5}})
         assert resp.status_code == 422
+
+
+    
+
+def noise_branch(temporal=0.8):
+    from backend.fusion.contracts import NoiseBranchInput
+    return NoiseBranchInput(
+        temporal_inconsistency_score=temporal, mean_noise_energy=0.02,
+        face_bg_noise_discrepancy=0.4, frame_noise_energies=[0.01, 0.03, 0.02],
+    )
+
+
+@pytest.mark.unit
+class TestNoiseBranch:
+    def test_noise_only_input_is_accepted_by_engine(self):
+        res = FusionEngine().run(FusionInput(sample_id="n1", noise=noise_branch()))
+        assert res.branches_used == ["noise"]
+        assert res.anomaly_map.granularity == "frame"
+        assert res.confidence.label == "fake"
+
+    def test_noise_is_pooled_with_other_branches(self):
+        fi = FusionInput(sample_id="n2", image=image_branch(0.2), noise=noise_branch(0.8))
+        r = ConfidenceDecoder().decode(fi, EMB)
+        # mean(0.2, 0.8) = 0.5 -> at the threshold, so labelled fake with confidence 0.5
+        assert r.label == "fake"
+        assert r.confidence == pytest.approx(0.5)

@@ -60,4 +60,9 @@ class AnomalyDecoder:
             scores = np.clip(np.asarray(fusion_input.video.frame_scores, dtype=np.float32), 0.0, 1.0)
             return AnomalyMap(granularity="frame", values=scores.tolist(), shape=[int(scores.shape[0])])
 
+                # 4) Noise-only input: per-frame noise energy, rescaled to [0, 1].
+        if fusion_input.noise is not None and fusion_input.noise.frame_noise_energies:
+            energies = np.asarray(fusion_input.noise.frame_noise_energies, dtype=np.float32)
+            norm = self._normalize(energies)
+            return AnomalyMap(granularity="frame", values=norm.tolist(), shape=[int(norm.shape[0])])
         raise ValueError("Cannot localize: FusionInput has no usable branch data")

@@ -50,4 +50,6 @@ class ConfidenceDecoder:
         is_fake = fake_prob >= self.config.fake_threshold
         # Confidence = how far the probability sits on the winning side.
         confidence = fake_prob if is_fake else 1.0 - fake_prob
+        if fusion_input.noise is not None:
+            scores.append(fusion_input.noise.temporal_inconsistency_score)
         return ConfidenceResult(label="fake" if is_fake else "real", confidence=confidence)

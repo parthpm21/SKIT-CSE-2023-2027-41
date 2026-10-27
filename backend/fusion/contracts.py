@@ -31,12 +31,20 @@ class VideoBranchInput(BaseModel):
     frame_scores: List[float] = Field(..., description="Per-frame anomaly scores")
 
 
+class NoiseBranchInput(BaseModel):
+    """Features from the SRM / PRNU noise-fingerprint extractor (video branch)."""
+    temporal_inconsistency_score: float = Field(..., description="Erratic inter-frame noise score [0, 1]")
+    mean_noise_energy: float = Field(..., description="Average residual variance across frames")
+    face_bg_noise_discrepancy: float = Field(..., description="Face vs background noise discrepancy")
+    frame_noise_energies: List[float] = Field(default_factory=list, description="Per-frame noise energy sequence")
+
 class FusionInput(BaseModel):
     """Multi-branch input payload passed to the Cross-Modal Fusion Transformer."""
     sample_id: str = Field(..., description="Unique media/sample identifier")
     image: Optional[ImageBranchInput] = None
     diffusion: Optional[DiffusionBranchInput] = None
     video: Optional[VideoBranchInput] = None
+    noise: Optional[NoiseBranchInput] = None
 
 
 class AnomalyMap(BaseModel):

@@ -52,6 +52,12 @@ class CrossModalFusionTransformer:
             pooled = np.mean(fusion_input.video.frame_embeddings, axis=0).tolist()
             embeddings.append(self._project(pooled))
 
+        if fusion_input.noise is not None:
+            n = fusion_input.noise
+            embeddings.append(self._project([
+                n.temporal_inconsistency_score, n.mean_noise_energy, n.face_bg_noise_discrepancy,
+            ]))
+            
         if not embeddings:
             raise ValueError("FusionInput must have at least one active branch")
 

@@ -23,7 +23,7 @@ class FusionEngine:
         self.confidence_decoder = ConfidenceDecoder()
 
     def run(self, fusion_input: FusionInput) -> FusionResult:
-        branches = [name for name in ("image", "diffusion", "video")
+        branches = [name for name in ("image", "diffusion", "video", "noise")
                     if getattr(fusion_input, name) is not None]
         fused = self.transformer.fuse(fusion_input)  # raises if no branch present
         return FusionResult(
