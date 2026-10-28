@@ -39,6 +39,8 @@ class ConfidenceDecoder:
             scores.append(fusion_input.diffusion.diffusion_score)
         if fusion_input.video is not None and fusion_input.video.frame_scores:
             scores.append(float(np.mean(fusion_input.video.frame_scores)))
+        if fusion_input.noise is not None:
+            scores.append(fusion_input.noise.temporal_inconsistency_score)
         return [float(np.clip(s, 0.0, 1.0)) for s in scores]
 
     def decode(self, fusion_input: FusionInput, fused_embedding: np.ndarray) -> ConfidenceResult:
@@ -50,6 +52,4 @@ class ConfidenceDecoder:
         is_fake = fake_prob >= self.config.fake_threshold
         # Confidence = how far the probability sits on the winning side.
         confidence = fake_prob if is_fake else 1.0 - fake_prob
-        if fusion_input.noise is not None:
-            scores.append(fusion_input.noise.temporal_inconsistency_score)
         return ConfidenceResult(label="fake" if is_fake else "real", confidence=confidence)
