@@ -40,7 +40,8 @@ const regions = [
   },
 ];
 
-function SuspiciousRegions({ selectedRegion, setSelectedRegion }) {
+function SuspiciousRegions({ selectedRegion, setSelectedRegion, regions: customRegions }) {
+  const activeRegions = customRegions || regions;
   const getLevelStyles = (level) => {
     if (level === "High") {
       return {
@@ -89,7 +90,7 @@ function SuspiciousRegions({ selectedRegion, setSelectedRegion }) {
       </div>
 
       <div className="mt-7 grid gap-4 md:grid-cols-2">
-        {regions.map((region) => {
+        {activeRegions.map((region) => {
           const styles = getLevelStyles(region.level);
           const Icon = styles.icon;
           const isSelected = selectedRegion?.id === region.id;

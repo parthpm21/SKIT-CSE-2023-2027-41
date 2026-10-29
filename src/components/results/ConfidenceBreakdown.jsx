@@ -35,7 +35,15 @@ const signals = [
   },
 ];
 
-function ConfidenceBreakdown() {
+function ConfidenceBreakdown({ data }) {
+  const dynamicSignals = signals.map((s) => {
+    if (!data?.breakdown) return s;
+    if (s.label === "Detection") return { ...s, value: data.breakdown.detection ?? s.value };
+    if (s.label === "Localization") return { ...s, value: data.breakdown.localization ?? s.value };
+    if (s.label === "Explainability") return { ...s, value: data.breakdown.explainability ?? s.value };
+    return s;
+  });
+
   return (
     <section className="mt-6 rounded-3xl border border-gray-100 bg-white p-6 shadow-sm md:p-8">
       {/* Header */}
@@ -62,7 +70,7 @@ function ConfidenceBreakdown() {
 
       {/* Signal Cards */}
       <div className="mt-6 grid gap-4 md:grid-cols-3">
-        {signals.map((signal) => {
+        {dynamicSignals.map((signal) => {
           const Icon = signal.icon;
 
           return (
