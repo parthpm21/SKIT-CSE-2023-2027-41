@@ -5,9 +5,10 @@ import {
   TrendingUp,
 } from "lucide-react";
 
-function VerdictCard() {
-  const verdict = "Potentially Manipulated";
-  const confidence = 87.4;
+function VerdictCard({ data }) {
+  const verdict = data?.verdict || "Potentially Manipulated";
+  const confidence = data?.confidence ?? 87.4;
+  const isAuthentic = data?.isAuthentic ?? false;
 
   return (
     <section className="rounded-3xl border border-purple-100 bg-white p-6 shadow-sm md:p-8">
@@ -15,8 +16,16 @@ function VerdictCard() {
 
         {/* Verdict */}
         <div className="flex items-start gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-red-50">
-            <AlertTriangle className="h-7 w-7 text-red-500" />
+          <div
+            className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${
+              isAuthentic ? "bg-green-50" : "bg-red-50"
+            }`}
+          >
+            {isAuthentic ? (
+              <ShieldCheck className="h-7 w-7 text-green-600" />
+            ) : (
+              <AlertTriangle className="h-7 w-7 text-red-500" />
+            )}
           </div>
 
           <div>
@@ -29,7 +38,9 @@ function VerdictCard() {
             </h2>
 
             <p className="mt-1 text-sm text-gray-500">
-              The analysis found evidence associated with digital manipulation.
+              {isAuthentic
+                ? "The forensic pipeline found no significant evidence of digital manipulation."
+                : "The analysis found evidence associated with digital manipulation."}
             </p>
           </div>
         </div>
@@ -52,7 +63,9 @@ function VerdictCard() {
 
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
             <div
-              className="h-full rounded-full bg-purple-600 transition-all"
+              className={`h-full rounded-full transition-all ${
+                isAuthentic ? "bg-green-600" : "bg-purple-600"
+              }`}
               style={{ width: `${confidence}%` }}
             />
           </div>

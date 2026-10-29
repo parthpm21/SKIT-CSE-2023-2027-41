@@ -35,7 +35,8 @@ const regions = [
   },
 ];
 
-function HeatmapViewer({ file, selectedRegion }) {
+function HeatmapViewer({ file, selectedRegion, regions: customRegions }) {
+  const activeRegions = customRegions || regions;
   const [previewUrl, setPreviewUrl] = useState(null);
   const [view, setView] = useState("original");
   const [zoom, setZoom] = useState(1);
@@ -193,7 +194,7 @@ function HeatmapViewer({ file, selectedRegion }) {
 
             {/* Region boxes */}
             {view === "overlay" &&
-              regions.map((region) => (
+              activeRegions.map((region) => (
                 <div
                   key={region.id}
                     className={`absolute ${region.position} ${region.size} rounded-xl border-2 ${

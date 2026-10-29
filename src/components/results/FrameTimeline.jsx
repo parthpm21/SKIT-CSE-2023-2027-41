@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Film,
   AlertTriangle,
@@ -18,8 +18,15 @@ const frames = [
   { id: 8, score: 18, level: "Normal", time: "00:08" },
 ];
 
-function FrameTimeline() {
-  const [selectedFrame, setSelectedFrame] = useState(frames[3]);
+function FrameTimeline({ frames: customFrames }) {
+  const activeFrames = customFrames || frames;
+  const [selectedFrame, setSelectedFrame] = useState(activeFrames[3] || activeFrames[0]);
+
+  useEffect(() => {
+    if (customFrames && customFrames.length > 0) {
+      setSelectedFrame(customFrames[3] || customFrames[0]);
+    }
+  }, [customFrames]);
 
   const getFrameColor = (level) => {
     if (level === "High") return "bg-red-500";
@@ -182,7 +189,7 @@ function FrameTimeline() {
           </div>
 
           <p className="text-xs text-gray-400">
-            {frames.length} analyzed frames
+            {activeFrames.length} analyzed frames
           </p>
         </div>
 
@@ -191,7 +198,7 @@ function FrameTimeline() {
             <div className="absolute left-0 right-0 top-3 h-1 rounded-full bg-gray-200" />
 
             <div className="relative flex items-start justify-between">
-              {frames.map((frame) => {
+              {activeFrames.map((frame) => {
                 const isSelected = selectedFrame.id === frame.id;
 
                 return (

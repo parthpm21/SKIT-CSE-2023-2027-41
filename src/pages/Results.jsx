@@ -9,6 +9,8 @@ import ExplainabilityPanel from "../components/results/ExplainabilityPanel";
 import AnalysisMetadata from "../components/results/AnalysisMetadata";
 import TechnicalDetails from "../components/results/TechnicalDetails";
 import ExportReportModal from "../components/results/ExportReportModal";
+import MockScenarioBar from "../components/results/MockScenarioBar";
+import { getMockForensicData, simulateForensicApiCall } from "../services/mockForensicApi";
 import { Link } from "react-router-dom";
 import { Download, ArrowLeft } from "lucide-react";
 import {
@@ -26,8 +28,23 @@ function Results() {
   const file = location.state?.file;
   const selectedOptions = location.state?.selectedOptions || [];
 
+  const [activeScenarioKey, setActiveScenarioKey] = useState("FACE_SWAP");
+  const [forensicData, setForensicData] = useState(() =>
+    getMockForensicData("FACE_SWAP", file)
+  );
+  const [isScenarioLoading, setIsScenarioLoading] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
+  const handleSelectScenario = async (key) => {
+    setActiveScenarioKey(key);
+    setIsScenarioLoading(true);
+    const data = await simulateForensicApiCall(key, file, 350);
+    setForensicData(data);
+    setSelectedRegion(null);
+    setIsScenarioLoading(false);
+  };
+
   return (
     <main className="min-h-screen bg-[#faf9fc] px-6 pb-20 pt-32">
       <div className="mx-auto max-w-7xl">
@@ -48,8 +65,15 @@ function Results() {
           </p>
         </div>
 
-        <VerdictCard />
-        <ConfidenceBreakdown />
+        {/* Mock API Scenario Switcher */}
+        <MockScenarioBar
+          activeScenarioKey={activeScenarioKey}
+          onSelectScenario={handleSelectScenario}
+          isLoading={isScenarioLoading}
+        />
+
+        <VerdictCard data={forensicData} />
+        <ConfidenceBreakdown data={forensicData} />
 
         {/* Main grid */}
         <div className="mt-6 grid gap-6 lg:grid-cols-3">
@@ -71,8 +95,9 @@ function Results() {
             </div>
 
             <HeatmapViewer
-            file={file}
-            selectedRegion={selectedRegion}
+              file={file}
+              selectedRegion={selectedRegion}
+              regions={forensicData?.regions}
             />           
 
             </section>                   
@@ -136,12 +161,13 @@ function Results() {
 
         {/* Suspicious Regions */}
         <SuspiciousRegions
-        selectedRegion={selectedRegion}
-        setSelectedRegion={setSelectedRegion}
+          selectedRegion={selectedRegion}
+          setSelectedRegion={setSelectedRegion}
+          regions={forensicData?.regions}
         />    
 
-        {file?.type?.startsWith("video/") && (
-        <FrameTimeline />
+        {(file?.type?.startsWith("video/") || activeScenarioKey === "VIDEO_TEMPORAL") && (
+          <FrameTimeline frames={forensicData?.videoFrames} />
         )}
 
        <ExplainabilityPanel />
