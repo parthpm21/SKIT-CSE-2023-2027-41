@@ -3,9 +3,10 @@ TruthLens - Attention Rollout Interpretability Utility
 Author: TruthLens Development Team
 Sprint 2: Interpretability (Part 3 - Attention Rollout Implementation)
 
-This module provides the AttentionRolloutEngine interface and the standalone
+This module provides the AttentionRolloutEngine interface, the standalone
 `compute_attention_rollout` mathematical utility for propagating self-attention
-matrices across Transformer layers.
+matrices across Transformer layers, and the `rollout_to_heatmap` utility
+to highlight important image regions that a Vision Transformer (ViT) focuses on.
 
 Attention Rollout Flow:
 Layer Attention Matrices [A_0, A_1, ..., A_{L-1}]
@@ -14,14 +15,26 @@ Layer Attention Matrices [A_0, A_1, ..., A_{L-1}]
   -> Normalize across last dimension (row sum = 1)
   -> Recursive layer multiplication: R_l = A_l @ R_{l-1}
   -> Cumulative Rollout Matrix R of shape (N, N)
+  -> Extract [CLS] row over patch tokens (N - 1)
+  -> Reshape to 2D patch grid (grid_h, grid_w)
+  -> Upsample to target image resolution (target_h, target_w)
+  -> Normalized 2D Attention Heatmap [0.0, 1.0]
 """
 
 from __future__ import annotations
 
 import logging
-from typing import Any, List, Optional, Sequence, Union
+import math
+from typing import Any, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
+
+try:
+    import cv2
+    HAS_CV2 = True
+except ImportError:
+    cv2 = None
+    HAS_CV2 = False
 
 try:
     import torch
@@ -240,6 +253,166 @@ def compute_attention_rollout(
     return rollout
 
 
+def rollout_to_heatmap(
+    rollout_matrix: Union[np.ndarray, "torch.Tensor"],
+    grid_size: Optional[Tuple[int, int]] = None,
+    target_size: Optional[Tuple[int, int]] = None,
+    cls_token_index: int = 0,
+) -> np.ndarray:
+    """
+    Convert a cumulative Attention Rollout matrix into a 2D spatial heatmap
+    highlighting the image regions that a Vision Transformer (ViT) focuses on.
+
+    ViT Spatial Mapping Flow:
+    1. Extract the attention row corresponding to the [CLS] token (default index 0).
+    2. Exclude the [CLS] token itself to isolate attention weights across patch tokens.
+    3. Reshape the 1D patch attention vector into a 2D spatial grid (grid_h, grid_w).
+    4. Upsample the spatial grid to the target image dimensions (target_h, target_w)
+       via bilinear interpolation.
+    5. Min-max normalize the heatmap values into the [0.0, 1.0] range.
+
+    Args:
+        rollout_matrix: 2D square rollout matrix of shape (N, N).
+        grid_size: Optional (grid_h, grid_w) tuple representing the ViT patch grid dimensions.
+            If None, square dimensions are automatically inferred from the number of patches.
+        target_size: Optional (target_h, target_w) tuple to resize the heatmap to (e.g., original
+            or preprocessed image dimensions). If None, the un-interpolated patch grid is returned.
+        cls_token_index: Index of the class token ([CLS]) in the sequence (default 0).
+
+    Returns:
+        np.ndarray: 2D float32 numpy array with values normalized in [0.0, 1.0].
+
+    Raises:
+        ValueError: If rollout_matrix is None, non-2D, non-square, has fewer than 2 tokens,
+            cls_token_index is out of range, or grid_size does not match the patch token count.
+        TypeError: If rollout_matrix cannot be converted to a numerical array.
+    """
+    if rollout_matrix is None:
+        raise ValueError("rollout_matrix cannot be None.")
+
+    # Convert PyTorch Tensor or array-like to NumPy array
+    if HAS_TORCH and torch is not None and isinstance(rollout_matrix, torch.Tensor):
+        rollout_np = rollout_matrix.detach().cpu().numpy()
+    elif isinstance(rollout_matrix, np.ndarray):
+        rollout_np = rollout_matrix
+    else:
+        try:
+            rollout_np = np.asarray(rollout_matrix, dtype=np.float32)
+        except Exception as e:
+            raise TypeError(f"Could not convert rollout_matrix to np.ndarray: {e}") from e
+
+    if rollout_np.ndim != 2:
+        raise ValueError(
+            f"rollout_matrix must be a 2D matrix (N, N), got shape {rollout_np.shape} with {rollout_np.ndim} dimensions."
+        )
+
+    n_rows, n_cols = rollout_np.shape
+    if n_rows != n_cols:
+        raise ValueError(
+            f"rollout_matrix must be square, got shape ({n_rows}, {n_cols})."
+        )
+
+    if n_rows < 2:
+        raise ValueError(
+            f"rollout_matrix must have at least 2 tokens (1 [CLS] token + patch tokens), got {n_rows}."
+        )
+
+    if cls_token_index < 0 or cls_token_index >= n_rows:
+        raise ValueError(
+            f"cls_token_index {cls_token_index} is out of bounds for sequence length {n_rows}."
+        )
+
+    # Extract attention row from [CLS] token to all tokens
+    cls_attention = rollout_np[cls_token_index, :]
+
+    # Remove the self-attention of the [CLS] token to isolate spatial patch attention
+    patch_attention = np.delete(cls_attention, cls_token_index)
+    num_patches = len(patch_attention)
+
+    # Determine spatial grid dimensions (grid_h, grid_w)
+    if grid_size is None:
+        side = int(math.isqrt(num_patches))
+        if side * side != num_patches:
+            raise ValueError(
+                f"Cannot infer square patch grid for {num_patches} patches. "
+                f"Please provide an explicit grid_size=(grid_h, grid_w)."
+            )
+        grid_h, grid_w = side, side
+    else:
+        if len(grid_size) != 2 or grid_size[0] <= 0 or grid_size[1] <= 0:
+            raise ValueError(
+                f"grid_size must be a tuple of two positive integers, got {grid_size}."
+            )
+        grid_h, grid_w = int(grid_size[0]), int(grid_size[1])
+        if grid_h * grid_w != num_patches:
+            raise ValueError(
+                f"grid_size ({grid_h}, {grid_w}) product {grid_h * grid_w} does not match "
+                f"the number of patch tokens {num_patches}."
+            )
+
+    # Reshape 1D patch attention into 2D grid
+    spatial_map = patch_attention.reshape((grid_h, grid_w)).astype(np.float32)
+
+    # Upsample/interpolate to target resolution if specified
+    if target_size is not None:
+        if len(target_size) != 2 or target_size[0] <= 0 or target_size[1] <= 0:
+            raise ValueError(
+                f"target_size must be a tuple of two positive integers (height, width), got {target_size}."
+            )
+        target_h, target_w = int(target_size[0]), int(target_size[1])
+
+        if HAS_CV2 and cv2 is not None:
+            # cv2.resize expects dsize=(width, height)
+            spatial_map = cv2.resize(
+                spatial_map,
+                (target_w, target_h),
+                interpolation=cv2.INTER_LINEAR,
+            )
+        else:
+            # Fallback interpolation using numpy index grids
+            row_indices = np.linspace(0, grid_h - 1, target_h).round().astype(int)
+            col_indices = np.linspace(0, grid_w - 1, target_w).round().astype(int)
+            spatial_map = spatial_map[np.ix_(row_indices, col_indices)]
+
+    # Normalize heatmap to [0.0, 1.0]
+    min_val = float(np.min(spatial_map))
+    max_val = float(np.max(spatial_map))
+    if max_val > min_val:
+        heatmap = (spatial_map - min_val) / (max_val - min_val)
+    else:
+        heatmap = np.zeros_like(spatial_map, dtype=np.float32)
+
+    return heatmap.astype(np.float32)
+
+
+def compute_attention_rollout_heatmap(
+    attention_matrices: Sequence[Union[np.ndarray, "torch.Tensor"]],
+    grid_size: Optional[Tuple[int, int]] = None,
+    target_size: Optional[Tuple[int, int]] = None,
+    cls_token_index: int = 0,
+) -> np.ndarray:
+    """
+    Convenience wrapper to compute cumulative Attention Rollout and convert
+    it directly to a 2D spatial heatmap highlighting image regions.
+
+    Args:
+        attention_matrices: Non-empty sequence of attention matrices across Transformer layers.
+        grid_size: Optional (grid_h, grid_w) tuple for patch dimensions.
+        target_size: Optional (target_h, target_w) tuple to resize heatmap to (e.g. image size).
+        cls_token_index: Index of the [CLS] token (default 0).
+
+    Returns:
+        np.ndarray: 2D normalized heatmap [0.0, 1.0] of shape target_size or grid_size.
+    """
+    rollout = compute_attention_rollout(attention_matrices)
+    return rollout_to_heatmap(
+        rollout_matrix=rollout,
+        grid_size=grid_size,
+        target_size=target_size,
+        cls_token_index=cls_token_index,
+    )
+
+
 class AttentionRolloutEngine:
     """
     Attention Rollout explanation engine for Transformer vision backbones.
@@ -352,3 +525,45 @@ class AttentionRolloutEngine:
 
         finally:
             self._remove_hooks()
+
+    def generate_heatmap(
+        self,
+        input_tensor: Optional[Any] = None,
+        target_size: Optional[Tuple[int, int]] = None,
+        grid_size: Optional[Tuple[int, int]] = None,
+        cls_token_index: int = 0,
+    ) -> np.ndarray:
+        """
+        Generate a 2D Attention Rollout heatmap for the given input tensor.
+
+        Args:
+            input_tensor: PyTorch tensor input batch of shape (1, C, H, W).
+            target_size: Optional (height, width) tuple to resize output heatmap to.
+            grid_size: Optional (grid_h, grid_w) tuple representing Transformer patch grid.
+            cls_token_index: Index of the [CLS] token (default 0).
+
+        Returns:
+            np.ndarray: 2D normalized heatmap [0.0, 1.0].
+
+        Raises:
+            RuntimeError: If no suitable Transformer model is loaded in the codebase.
+        """
+        if not self.is_available():
+            raise RuntimeError(
+                "Attention Rollout cannot be executed: No supported Transformer model "
+                "or inference pipeline is currently loaded in TruthLens codebase. "
+                "Please integrate a Transformer vision backbone (e.g., CLIP, ViT, or DINOv2) "
+                "before generating live Attention Rollout explanations."
+            )
+
+        rollout = self.generate_rollout(input_tensor=input_tensor)
+        if target_size is None and input_tensor is not None and hasattr(input_tensor, "shape") and len(input_tensor.shape) >= 4:
+            target_size = (int(input_tensor.shape[2]), int(input_tensor.shape[3]))
+
+        return rollout_to_heatmap(
+            rollout_matrix=rollout,
+            grid_size=grid_size,
+            target_size=target_size,
+            cls_token_index=cls_token_index,
+        )
+

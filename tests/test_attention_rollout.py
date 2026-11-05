@@ -13,6 +13,8 @@ import pytest
 from backend.interpretability.attention_rollout import (
     AttentionRolloutEngine,
     compute_attention_rollout,
+    compute_attention_rollout_heatmap,
+    rollout_to_heatmap,
 )
 
 try:
@@ -240,3 +242,140 @@ def test_attention_rollout_engine_raises_without_model():
         engine.generate_rollout(input_tensor=None)
     assert "Attention Rollout cannot be executed" in str(exc_info.value)
     assert "No supported Transformer model" in str(exc_info.value)
+
+
+# ============================================================================
+# ViT Spatial Heatmap & Image Region Highlighting Tests
+# ============================================================================
+
+def test_rollout_to_heatmap_valid_square_grid():
+    """
+    Verify rollout_to_heatmap converts a ViT rollout matrix (1 CLS + 16 patches)
+    into a valid normalized 2D spatial heatmap with inferred square grid (4x4).
+    """
+    # 1 [CLS] token + 16 patch tokens = 17 tokens
+    n_tokens = 17
+    synth_matrix = make_synthetic_softmax_attention(n_tokens=n_tokens)
+    rollout = compute_attention_rollout([synth_matrix])
+
+    target_size = (64, 64)
+    heatmap = rollout_to_heatmap(rollout, target_size=target_size)
+
+    # Check output properties
+    assert isinstance(heatmap, np.ndarray)
+    assert heatmap.shape == target_size
+    assert heatmap.dtype == np.float32
+    assert np.all(np.isfinite(heatmap))
+    assert np.all(heatmap >= 0.0)
+    assert np.all(heatmap <= 1.0)
+    # Check normalization spread
+    assert np.isclose(np.max(heatmap), 1.0, atol=1e-5)
+    assert np.isclose(np.min(heatmap), 0.0, atol=1e-5)
+
+
+def test_rollout_to_heatmap_unscaled_grid():
+    """Verify rollout_to_heatmap returns raw patch grid shape when target_size is None."""
+    # 1 [CLS] token + 9 patch tokens (3x3 grid) = 10 tokens
+    n_tokens = 10
+    synth_matrix = make_synthetic_softmax_attention(n_tokens=n_tokens)
+    rollout = compute_attention_rollout([synth_matrix])
+
+    heatmap = rollout_to_heatmap(rollout, target_size=None)
+
+    assert heatmap.shape == (3, 3)
+    assert np.all(heatmap >= 0.0)
+    assert np.all(heatmap <= 1.0)
+
+
+def test_rollout_to_heatmap_explicit_non_square_grid():
+    """Verify rollout_to_heatmap supports non-square patch grids (e.g., 2x8 = 16 patches)."""
+    n_tokens = 17  # 1 CLS + 16 patches
+    synth_matrix = make_synthetic_softmax_attention(n_tokens=n_tokens)
+    rollout = compute_attention_rollout([synth_matrix])
+
+    heatmap = rollout_to_heatmap(
+        rollout,
+        grid_size=(2, 8),
+        target_size=(30, 120),
+    )
+
+    assert heatmap.shape == (30, 120)
+    assert np.isclose(np.max(heatmap), 1.0, atol=1e-5)
+    assert np.isclose(np.min(heatmap), 0.0, atol=1e-5)
+
+
+def test_compute_attention_rollout_heatmap_end_to_end():
+    """Verify end-to-end compute_attention_rollout_heatmap from multi-layer attention matrices."""
+    # 3 layers of 1 CLS + 16 patches (17 tokens) with 4 heads
+    layers = [
+        make_synthetic_softmax_attention(n_tokens=17, heads=4)
+        for _ in range(3)
+    ]
+
+    heatmap = compute_attention_rollout_heatmap(
+        layers,
+        target_size=(224, 224),
+    )
+
+    assert heatmap.shape == (224, 224)
+    assert np.all(np.isfinite(heatmap))
+    assert np.all(heatmap >= 0.0)
+    assert np.all(heatmap <= 1.0)
+
+
+def test_rollout_to_heatmap_invalid_inputs():
+    """Verify descriptive ValueErrors for invalid inputs to rollout_to_heatmap."""
+    # None input
+    with pytest.raises(ValueError) as exc:
+        rollout_to_heatmap(None)  # type: ignore
+    assert "cannot be None" in str(exc.value)
+
+    # 1D input
+    with pytest.raises(ValueError) as exc:
+        rollout_to_heatmap(np.array([1.0, 2.0]))
+    assert "must be a 2D matrix" in str(exc.value)
+
+    # Fewer than 2 tokens
+    with pytest.raises(ValueError) as exc:
+        rollout_to_heatmap(np.ones((1, 1)))
+    assert "at least 2 tokens" in str(exc.value)
+
+    # Out-of-bounds CLS index
+    with pytest.raises(ValueError) as exc:
+        rollout_to_heatmap(np.ones((5, 5)), cls_token_index=10)
+    assert "out of bounds" in str(exc.value)
+
+    # Incompatible explicit grid size (3x3 = 9 != 16 patches)
+    with pytest.raises(ValueError) as exc:
+        rollout_to_heatmap(np.ones((17, 17)), grid_size=(3, 3))
+    assert "does not match the number of patch tokens" in str(exc.value)
+
+    # Non-square patch count with no explicit grid size (10 patches is not a square)
+    with pytest.raises(ValueError) as exc:
+        rollout_to_heatmap(np.ones((11, 11)))
+    assert "Cannot infer square patch grid" in str(exc.value)
+
+
+def test_attention_rollout_engine_generate_heatmap_raises_without_model():
+    """
+    Verify generate_heatmap() raises descriptive RuntimeError when no model is integrated,
+    ensuring TruthLens never manufactures fake heatmaps.
+    """
+    engine = AttentionRolloutEngine(model=None, target_layers=None)
+    with pytest.raises(RuntimeError) as exc_info:
+        engine.generate_heatmap(input_tensor=None)
+    assert "Attention Rollout cannot be executed" in str(exc_info.value)
+    assert "No supported Transformer model" in str(exc_info.value)
+
+
+def test_package_exports():
+    """Verify backend.interpretability exports all required public utilities."""
+    import backend.interpretability as interp
+
+    assert hasattr(interp, "compute_attention_rollout")
+    assert hasattr(interp, "rollout_to_heatmap")
+    assert hasattr(interp, "compute_attention_rollout_heatmap")
+    assert hasattr(interp, "AttentionRolloutEngine")
+    assert hasattr(interp, "compute_gradcam_heatmap")
+    assert hasattr(interp, "GradCAMEngine")
+
